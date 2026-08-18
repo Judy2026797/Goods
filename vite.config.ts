@@ -4,7 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: process.env.GITHUB_ACTIONS ? '/guiwu/' : '/',
+  base: process.env.GITHUB_ACTIONS ? '/Goods/' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
