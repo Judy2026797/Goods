@@ -1,9 +1,10 @@
 import Dexie, { Table } from 'dexie';
-import { Item, MovingItem, Category, Settings, PRESET_CATEGORIES, DEFAULT_SETTINGS } from '@/types';
+import { Item, MovingItem, ClothingItem, Category, Settings, PRESET_CATEGORIES, DEFAULT_SETTINGS } from '@/types';
 
 class InventoryDB extends Dexie {
   items!: Table<Item, number>;
   movingItems!: Table<MovingItem, number>;
+  clothingItems!: Table<ClothingItem, number>;
   categories!: Table<Category, string>;
   settings!: Table<Settings, number>;
 
@@ -26,6 +27,13 @@ class InventoryDB extends Dexie {
       categories: 'id, name, sortOrder, isPreset',
       settings: 'id',
     });
+    this.version(4).stores({
+      items: '++id, name, categoryId, status, purchaseDate, currency, warrantyExpiry',
+      movingItems: '++id, name, categoryId, status, source',
+      clothingItems: '++id, name, brand, season, color, status, purchaseDate, currency',
+      categories: 'id, name, sortOrder, isPreset',
+      settings: 'id',
+    });
   }
 }
 
@@ -43,6 +51,7 @@ export async function initDB() {
 async function doInitDB() {
   await syncPresetCategories();
   await migrateItemSource();
+  await migrateClothingItems();
   await migrateMovingItems();
 
   const setCount = await db.settings.count();
@@ -54,6 +63,39 @@ async function doInitDB() {
 async function migrateItemSource() {
   // 旧数据没有 source 字段，统一补为 purchased
   await db.items.filter(item => !item.source).modify({ source: 'purchased' });
+}
+
+async function migrateClothingItems() {
+  // 把 items 中分类为「服饰」的物品迁移到独立的 clothingItems 表，并从 items 删除
+  // 在 migrateMovingItems 之前执行，确保即便服饰来源是赠送也不会被误迁到搬家表
+  const clothing = await db.items.where('categoryId').equals('clothing').toArray();
+  if (clothing.length === 0) return;
+
+  await db.transaction('rw', db.items, db.clothingItems, async () => {
+    for (const item of clothing) {
+      const now = new Date().toISOString();
+      await db.clothingItems.add({
+        name: item.name,
+        emoji: item.emoji || '👕',
+        status: item.status || 'active',
+        source: item.source || 'purchased',
+        quantity: item.quantity ?? 1,
+        purchasePrice: item.purchasePrice || 0,
+        additionalCost: item.additionalCost || 0,
+        purchaseDate: item.purchaseDate || now,
+        currency: item.currency || 'CNY',
+        reimbursed: item.reimbursed,
+        notes: item.notes,
+        size: item.size,
+        color: item.color,
+        season: item.season,
+        brand: item.brand,
+        createdAt: item.createdAt || now,
+        updatedAt: now,
+      } as ClothingItem);
+    }
+    await db.items.bulkDelete(clothing.map(i => i.id!));
+  });
 }
 
 async function migrateMovingItems() {
@@ -121,6 +163,20 @@ export async function updateItem(id: number, data: Partial<Item>) {
 
 export async function deleteItem(id: number) {
   return db.items.delete(id);
+}
+
+// Clothing Item CRUD (衣橱模块独立表)
+export async function addClothingItem(data: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'>) {
+  const now = new Date().toISOString();
+  return db.clothingItems.add({ ...data, createdAt: now, updatedAt: now } as ClothingItem);
+}
+
+export async function updateClothingItem(id: number, data: Partial<ClothingItem>) {
+  return db.clothingItems.update(id, { ...data, updatedAt: new Date().toISOString() });
+}
+
+export async function deleteClothingItem(id: number) {
+  return db.clothingItems.delete(id);
 }
 
 // Moving Item CRUD

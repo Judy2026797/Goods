@@ -18,6 +18,8 @@ const labelClass = "block text-xs font-medium text-gray-500 dark:text-gray-400 m
 export default function ItemForm({ item, editId }: Props) {
   const navigate = useNavigate()
   const categories = useLiveQuery(() => db.categories.orderBy('sortOrder').toArray(), [])
+  // 服饰已独立为衣橱模块，通用「添加」不再提供该分类，防止衣服录回 items 表
+  const selectableCategories = categories?.filter(c => c.id !== 'clothing')
   const settings = useLiveQuery(() => db.settings.get(1), [])
 
   const [showAdvanced, setShowAdvanced] = useState(!!item?.notes || !!item?.warrantyExpiry || !!item?.depreciationRate)
@@ -54,8 +56,8 @@ export default function ItemForm({ item, editId }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    if (!form.categoryId && categories?.length) {
-      set('categoryId', categories[0].id!)
+    if (!form.categoryId && selectableCategories?.length) {
+      set('categoryId', selectableCategories[0].id!)
       return
     }
 
@@ -64,7 +66,7 @@ export default function ItemForm({ item, editId }: Props) {
       const data = {
         name: form.name.trim(),
         emoji: form.emoji,
-        categoryId: form.categoryId || categories?.[0]?.id || '',
+        categoryId: form.categoryId || selectableCategories?.[0]?.id || '',
         status: form.status,
         source: form.source,
         quantity: Number(form.quantity) || 1,
@@ -122,7 +124,7 @@ export default function ItemForm({ item, editId }: Props) {
               onChange={e => set('categoryId', e.target.value)}
               className={inputClass}
             >
-              {categories?.map(c => (
+              {selectableCategories?.map(c => (
                 <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
               ))}
             </select>

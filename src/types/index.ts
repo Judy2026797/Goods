@@ -66,6 +66,28 @@ export interface MovingItem {
   updatedAt: string;
 }
 
+// 衣橱模块：服饰作为独立表，不与通用物品(items)混合
+export interface ClothingItem {
+  id?: number;
+  name: string;
+  emoji: string;
+  status: ItemStatus;
+  source: ItemSource;
+  quantity: number;
+  purchasePrice: number;
+  additionalCost: number;
+  purchaseDate: string;
+  currency: Currency;
+  reimbursed?: boolean;
+  notes?: string;
+  size?: string;
+  color?: string;
+  season?: ClothingSeason;
+  brand?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ComputedItem extends Item {
   totalCost: number;
   holdingDays: number;
