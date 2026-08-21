@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Plus, Settings as SettingsIcon, Moon, Sun, Truck } from 'lucide-react'
+import { LayoutGrid, Plus, Settings as SettingsIcon, Moon, Sun, Truck, Shirt } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import AddItemPage from './pages/AddItemPage'
 import EditItemPage from './pages/EditItemPage'
 import DetailPage from './pages/DetailPage'
 import SettingsPage from './pages/SettingsPage'
 import MovingListPage from './pages/MovingListPage'
+import WardrobePage from './pages/WardrobePage'
 
 export default function App() {
   const location = useLocation()
@@ -63,6 +64,17 @@ export default function App() {
               搬家
             </Link>
             <Link
+              to="/wardrobe"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                location.pathname === '/wardrobe'
+                  ? 'bg-brand-50 dark:bg-white/10 text-brand-600 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
+            >
+              <Shirt className="w-4 h-4" />
+              衣橱
+            </Link>
+            <Link
               to="/settings"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 location.pathname === '/settings'
@@ -92,6 +104,7 @@ export default function App() {
           <Route path="/item/:id" element={<DetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/moving" element={<MovingListPage />} />
+          <Route path="/wardrobe" element={<WardrobePage />} />
         </Routes>
       </main>
     </div>
