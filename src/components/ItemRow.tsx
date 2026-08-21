@@ -65,6 +65,11 @@ export default function ItemRow({ item }: Props) {
                   报销
                 </span>
               )}
+              {item.categoryId === 'clothing' && (item.size || item.color) && (
+                <span className="px-1.5 py-0.5 rounded bg-white/10">
+                  {[item.size, item.color].filter(Boolean).join('·')}
+                </span>
+              )}
               <span className="tabular-nums">{formatCurrency(item.totalCost, item.currency)}</span>
               <span className="text-white/60">·</span>
               <span className="tabular-nums">{formatCurrency(item.dailyAvgCost, item.currency)}/天</span>

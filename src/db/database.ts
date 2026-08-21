@@ -20,6 +20,12 @@ class InventoryDB extends Dexie {
       categories: 'id, name, sortOrder, isPreset',
       settings: 'id',
     });
+    this.version(3).stores({
+      items: '++id, name, categoryId, status, purchaseDate, currency, warrantyExpiry, size, color, season, brand',
+      movingItems: '++id, name, categoryId, status, source',
+      categories: 'id, name, sortOrder, isPreset',
+      settings: 'id',
+    });
   }
 }
 

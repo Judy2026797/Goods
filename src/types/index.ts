@@ -1,6 +1,15 @@
 export type Currency = 'CNY' | 'HKD';
 export type ItemStatus = 'active' | 'idle' | 'retired';
 export type ItemSource = 'purchased' | 'gifted' | 'other';
+export type ClothingSeason = 'all' | 'spring' | 'summer' | 'autumn' | 'winter';
+
+export const CLOTHING_SEASON_LABELS: Record<ClothingSeason, string> = {
+  all: '不限',
+  spring: '春',
+  summer: '夏',
+  autumn: '秋',
+  winter: '冬',
+};
 
 export interface Item {
   id?: number;
@@ -19,6 +28,11 @@ export interface Item {
   retiredDate?: string;
   depreciationRate?: number;
   notes?: string;
+  // 服装专属字段（仅服饰分类 clothing 使用）
+  size?: string;
+  color?: string;
+  season?: ClothingSeason;
+  brand?: string;
   createdAt: string;
   updatedAt: string;
 }

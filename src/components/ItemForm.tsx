@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, addItem, updateItem } from '@/db/database'
-import { Item, Currency, ItemStatus, ItemSource } from '@/types'
+import { Item, Currency, ItemStatus, ItemSource, ClothingSeason, CLOTHING_SEASON_LABELS } from '@/types'
 import { todayISO } from '@/utils/format'
 import EmojiPicker from './EmojiPicker'
 import { ChevronDown, ChevronUp, Save, X } from 'lucide-react'
@@ -39,11 +39,17 @@ export default function ItemForm({ item, editId }: Props) {
     retiredDate: item?.retiredDate || '',
     depreciationRate: item?.depreciationRate,
     notes: item?.notes || '',
+    size: item?.size || '',
+    color: item?.color || '',
+    season: (item?.season || 'all') as ClothingSeason,
+    brand: item?.brand || '',
   })
 
   const set = <K extends keyof typeof form>(key: K, value: typeof form[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
   }
+
+  const isClothing = form.categoryId === 'clothing'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,6 +77,10 @@ export default function ItemForm({ item, editId }: Props) {
         retiredDate: form.status === 'retired' ? (form.retiredDate || todayISO()) : undefined,
         depreciationRate: form.depreciationRate,
         notes: form.notes.trim() || undefined,
+        size: isClothing ? (form.size.trim() || undefined) : undefined,
+        color: isClothing ? (form.color.trim() || undefined) : undefined,
+        season: isClothing ? (form.season === 'all' ? undefined : form.season) : undefined,
+        brand: isClothing ? (form.brand.trim() || undefined) : undefined,
       }
 
       if (editId) {
@@ -207,6 +217,57 @@ export default function ItemForm({ item, editId }: Props) {
         </div>
       </div>
 
+      {/* Clothing fields (only for 服饰 category) */}
+      {isClothing && (
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 border border-gray-100 dark:border-[#2a2a2a] shadow-sm space-y-4">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">服装信息</div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>尺码</label>
+              <input
+                type="text"
+                value={form.size}
+                onChange={e => set('size', e.target.value)}
+                placeholder="如：L / 38码"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>颜色</label>
+              <input
+                type="text"
+                value={form.color}
+                onChange={e => set('color', e.target.value)}
+                placeholder="如：黑色"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>季节</label>
+              <select
+                value={form.season}
+                onChange={e => set('season', e.target.value as ClothingSeason)}
+                className={inputClass}
+              >
+                {(Object.keys(CLOTHING_SEASON_LABELS) as ClothingSeason[]).map(s => (
+                  <option key={s} value={s}>{CLOTHING_SEASON_LABELS[s]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>品牌</label>
+              <input
+                type="text"
+                value={form.brand}
+                onChange={e => set('brand', e.target.value)}
+                placeholder="如：优衣库"
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Advanced toggle */}
       <button
         type="button"
@@ -220,15 +281,17 @@ export default function ItemForm({ item, editId }: Props) {
       {showAdvanced && (
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 border border-gray-100 dark:border-[#2a2a2a] shadow-sm space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>过保日期</label>
-              <input
-                type="date"
-                value={form.warrantyExpiry || ''}
-                onChange={e => set('warrantyExpiry', e.target.value)}
-                className={inputClass}
-              />
-            </div>
+            {!isClothing && (
+              <div>
+                <label className={labelClass}>过保日期</label>
+                <input
+                  type="date"
+                  value={form.warrantyExpiry || ''}
+                  onChange={e => set('warrantyExpiry', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            )}
             <div>
               <label className={labelClass}>状态</label>
               <select
@@ -255,21 +318,23 @@ export default function ItemForm({ item, editId }: Props) {
             </div>
           )}
 
-          <div>
-            <label className={labelClass}>
-              年折旧率 (默认 {(settings?.defaultDepreciationRate ?? 0.1) * 100}%)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              value={form.depreciationRate ?? ''}
-              onChange={e => set('depreciationRate', e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="0.1 = 10%"
-              className={inputClass}
-            />
-          </div>
+          {!isClothing && (
+            <div>
+              <label className={labelClass}>
+                年折旧率 (默认 {(settings?.defaultDepreciationRate ?? 0.1) * 100}%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value={form.depreciationRate ?? ''}
+                onChange={e => set('depreciationRate', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder="0.1 = 10%"
+                className={inputClass}
+              />
+            </div>
+          )}
 
           <div>
             <label className={labelClass}>备注</label>

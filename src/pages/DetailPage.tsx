@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Navigate, Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, deleteItem } from '@/db/database'
+import { CLOTHING_SEASON_LABELS } from '@/types'
 import { computeItem } from '@/utils/calculations'
 import { formatCurrency, formatDays, formatDate, formatNumber } from '@/utils/format'
 import { Pencil, Trash2, ArrowLeft, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react'
@@ -124,6 +125,17 @@ export default function DetailPage() {
               过保日期：{formatDate(item.warrantyExpiry)}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Clothing info */}
+      {item.categoryId === 'clothing' && (item.size || item.color || item.season || item.brand) && (
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-5 border border-gray-100 dark:border-[#2a2a2a] shadow-sm">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">服装信息</div>
+          {item.size && <DetailRow label="尺码" value={item.size} />}
+          {item.color && <DetailRow label="颜色" value={item.color} />}
+          {item.season && <DetailRow label="季节" value={CLOTHING_SEASON_LABELS[item.season]} />}
+          {item.brand && <DetailRow label="品牌" value={item.brand} />}
         </div>
       )}
 
