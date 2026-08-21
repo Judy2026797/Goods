@@ -184,10 +184,35 @@ export default function WardrobePage() {
   const dupValue = dupGroups.reduce((s, g) => s + g.value, 0)
   const idleCount = list.filter(i => i.status === 'idle').length
 
-  const sortedList = useMemo(
-    () => [...list].sort((a, b) => (b.purchaseDate || '').localeCompare(a.purchaseDate || '')),
-    [list],
-  )
+  // 年份下拉筛选
+  const availableYears = useMemo(() => {
+    const years = new Set<number>()
+    list.forEach(it => {
+      if (!it.purchaseDate) return
+      const y = new Date(it.purchaseDate).getFullYear()
+      if (!Number.isNaN(y)) years.add(y)
+    })
+    return Array.from(years).sort((a, b) => b - a)
+  }, [list])
+
+  const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
+  // 当年份选项变更（比如某年数据被删光），自动回全部
+  useEffect(() => {
+    if (yearFilter !== 'all' && !availableYears.includes(yearFilter)) {
+      setYearFilter('all')
+    }
+  }, [availableYears, yearFilter])
+
+  const filteredList = useMemo(() => {
+    let res = [...list].sort((a, b) => (b.purchaseDate || '').localeCompare(a.purchaseDate || ''))
+    if (yearFilter !== 'all') {
+      res = res.filter(it => {
+        if (!it.purchaseDate) return false
+        return new Date(it.purchaseDate).getFullYear() === yearFilter
+      })
+    }
+    return res
+  }, [list, yearFilter])
 
   // ─── 内联增/改表单 ───
   const [showForm, setShowForm] = useState(false)
@@ -543,9 +568,29 @@ export default function WardrobePage() {
           )}
 
           {/* 全部衣物清单 */}
-          <Section title="全部衣物" subtitle={`${list.length} 条记录 · 按购买时间倒序`}>
+          <Section
+            title="全部衣物"
+            subtitle={`${filteredList.length} 条记录 · 按购买时间倒序${yearFilter !== 'all' ? ` · ${yearFilter}年` : ''}`}
+            icon={
+              availableYears.length > 0 && (
+                <select
+                  value={yearFilter}
+                  onChange={e => {
+                    const v = e.target.value
+                    setYearFilter(v === 'all' ? 'all' : Number(v))
+                  }}
+                  className="text-xs bg-gray-50 dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#2a2a2a] rounded-lg px-2 py-1 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                >
+                  <option value="all">全部年份</option>
+                  {availableYears.map(y => (
+                    <option key={y} value={y}>{y}年</option>
+                  ))}
+                </select>
+              )
+            }
+          >
             <div className="space-y-1.5">
-              {sortedList.map(it => (
+              {filteredList.map(it => (
                 <div key={it.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a]">
                   <span className="text-xl shrink-0">{it.emoji}</span>
                   <div className="flex-1 min-w-0">
