@@ -93,20 +93,21 @@ export default function WardrobePage() {
     return buckets
   }, [list, hkdRate])
 
-  // 按季节分布
-  const bySeason = useMemo(() => {
-    const order: ClothingSeason[] = ['all', 'spring', 'summer', 'autumn', 'winter']
-    const map = new Map<string, { count: number; value: number }>()
+  // 按年份支出分布
+  const byYear = useMemo(() => {
+    const map = new Map<number, { count: number; value: number }>()
     list.forEach(it => {
-      const key = it.season || 'all'
-      const cur = map.get(key) || { count: 0, value: 0 }
+      if (!it.purchaseDate) return
+      const year = new Date(it.purchaseDate).getFullYear()
+      if (Number.isNaN(year)) return
+      const cur = map.get(year) || { count: 0, value: 0 }
       cur.count += it.quantity || 1
       cur.value += valueCNY(it)
-      map.set(key, cur)
+      map.set(year, cur)
     })
-    return order
-      .map(s => ({ season: s, label: CLOTHING_SEASON_LABELS[s], ...(map.get(s) || { count: 0, value: 0 }) }))
-      .filter(s => s.count > 0)
+    return Array.from(map.entries())
+      .map(([year, v]) => ({ year, ...v }))
+      .sort((a, b) => b.year - a.year)
   }, [list, hkdRate])
 
   // 按品牌分布
@@ -125,13 +126,13 @@ export default function WardrobePage() {
       .sort((a, b) => b.value - a.value)
   }, [list, hkdRate])
 
-  // 疑似重复款式：同品牌 + 同颜色 + 同季节
+  // 疑似重复款式：同品牌 + 同颜色 + 同季节 + 同尺码
   const dupGroups = useMemo(() => {
     const map = new Map<string, ClothingItem[]>()
     list.forEach(it => {
       const brand = (it.brand || '').trim()
       if (!brand) return
-      const key = `${brand}|${(it.color || '').trim()}|${it.season || 'all'}`
+      const key = `${brand}|${(it.color || '').trim()}|${it.season || 'all'}|${(it.size || '').trim()}`
       const arr = map.get(key) || []
       arr.push(it)
       map.set(key, arr)
@@ -233,7 +234,7 @@ export default function WardrobePage() {
   }
 
   const maxMonth = Math.max(1, ...monthly.map(m => m.value))
-  const maxSeason = Math.max(1, ...bySeason.map(s => s.value))
+  const maxYear = Math.max(1, ...byYear.map(y => y.value))
   const maxBrand = Math.max(1, ...byBrand.map(b => b.value))
 
   return (
@@ -386,17 +387,17 @@ export default function WardrobePage() {
             </div>
           </Section>
 
-          {/* 按季节分布 */}
-          {bySeason.length > 0 && (
-            <Section title="按季节分布" subtitle="衣橱结构是否失衡">
+          {/* 按年份支出分布 */}
+          {byYear.length > 0 && (
+            <Section title="按年份支出" subtitle="每年在衣服上花了多少钱">
               <div className="space-y-2.5">
-                {bySeason.map(s => (
-                  <div key={s.season} className="flex items-center gap-3">
-                    <div className="w-10 text-sm text-gray-600 dark:text-gray-300 shrink-0">{s.label}</div>
+                {byYear.map(y => (
+                  <div key={y.year} className="flex items-center gap-3">
+                    <div className="w-14 text-sm text-gray-600 dark:text-gray-300 shrink-0 tabular-nums">{y.year}年</div>
                     <div className="flex-1 h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-lg" style={{ width: `${(s.value / maxSeason) * 100}%` }} />
+                      <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-lg" style={{ width: `${(y.value / maxYear) * 100}%` }} />
                     </div>
-                    <div className="w-28 text-right text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{s.count}件 · {formatCurrency(s.value, 'CNY')}</div>
+                    <div className="w-28 text-right text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{y.count}件 · {formatCurrency(y.value, 'CNY')}</div>
                   </div>
                 ))}
               </div>
@@ -422,7 +423,7 @@ export default function WardrobePage() {
 
           {/* 疑似重复款式 */}
           {dupGroups.length > 0 && (
-            <Section title="疑似重复款式" subtitle="同品牌 + 同颜色 + 同季节" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
+            <Section title="疑似重复款式" subtitle="同品牌 + 同颜色 + 同季节 + 同尺码" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
               <div className="space-y-3">
                 {dupGroups.map((g, idx) => (
                   <div key={idx} className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3">
