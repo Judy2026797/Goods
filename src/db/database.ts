@@ -76,7 +76,7 @@ async function migrateClothingItems() {
       const now = new Date().toISOString();
       await db.clothingItems.add({
         name: item.name,
-        emoji: item.emoji || '🧥',
+        emoji: item.emoji || '👚',
         status: item.status || 'active',
         source: item.source || 'purchased',
         quantity: item.quantity ?? 1,

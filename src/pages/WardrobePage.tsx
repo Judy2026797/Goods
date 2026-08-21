@@ -26,7 +26,7 @@ interface ClothingForm {
 function initialForm(): ClothingForm {
   return {
     name: '',
-    emoji: '🧥',
+    emoji: '👚',
     brand: '',
     season: 'all',
     size: '',
@@ -173,7 +173,7 @@ export default function WardrobePage() {
   const openEdit = (it: ClothingItem) => {
     setForm({
       name: it.name,
-      emoji: it.emoji || '🧥',
+      emoji: it.emoji || '👚',
       brand: it.brand || '',
       season: it.season || 'all',
       size: it.size || '',
@@ -201,7 +201,7 @@ export default function WardrobePage() {
     try {
       const data = {
         name: form.name.trim(),
-        emoji: form.emoji || '🧥',
+        emoji: form.emoji || '👚',
         brand: form.brand.trim() || undefined,
         season: form.season === 'all' ? undefined : form.season,
         size: form.size.trim() || undefined,
