@@ -102,7 +102,7 @@ export const PRESET_CATEGORIES: Category[] = [
   { id: 'kitchen', name: '厨具', emoji: '🍳', isPreset: true, sortOrder: 3 },
   { id: 'digital', name: '数码', emoji: '💻', isPreset: true, sortOrder: 4 },
   { id: 'daily', name: '日用品', emoji: '🧴', isPreset: true, sortOrder: 5 },
-  { id: 'clothing', name: '服饰', emoji: '👕', isPreset: true, sortOrder: 6 },
+  { id: 'clothing', name: '服饰', emoji: '🧥', isPreset: true, sortOrder: 6 },
   { id: 'sports', name: '运动', emoji: '⚽', isPreset: true, sortOrder: 7 },
   { id: 'other', name: '其他', emoji: '📦', isPreset: true, sortOrder: 8 },
 ];
