@@ -51,6 +51,7 @@ export interface Settings {
   hkdToCnyRate: number;
   warrantyWarningDays: number;
   warrantyCriticalDays: number;
+  annualClothingBudget?: number;
 }
 
 export interface MovingItem {
@@ -112,6 +113,7 @@ export const DEFAULT_SETTINGS: Omit<Settings, 'id'> = {
   hkdToCnyRate: 0.92,
   warrantyWarningDays: 30,
   warrantyCriticalDays: 7,
+  annualClothingBudget: 4500,
 };
 
 export const COMMON_EMOJIS = [

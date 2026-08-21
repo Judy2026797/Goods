@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Shirt, AlertTriangle, Plus, X, Pencil, Trash2 } from 'lucide-react'
 import { db, addClothingItem, updateClothingItem, deleteClothingItem } from '@/db/database'
@@ -51,6 +51,33 @@ export default function WardrobePage() {
 
   const hkdRate = settings?.hkdToCnyRate ?? 0.92
 
+  // 正常需求线（年目标，默认 4500，可在页面内修改并自动保存）
+  const budget = settings?.annualClothingBudget ?? 4500
+  const [budgetInput, setBudgetInput] = useState<number>(budget)
+  useEffect(() => { setBudgetInput(settings?.annualClothingBudget ?? 4500) }, [settings])
+  const saveBudget = async (v: number) => {
+    const val = Math.max(0, Math.round(Number(v) || 0))
+    setBudgetInput(val)
+    await db.settings.update(1, { annualClothingBudget: val })
+  }
+  const curYear = new Date().getFullYear()
+
+  // 年度状态：绿=正常够用 / 灰=明显低于正常需求(该补点) / 红=超支浪费
+  type YearStatus = 'green' | 'gray' | 'red'
+  const statusOf = (spend: number, target: number): YearStatus => {
+    if (target <= 0) return 'green'
+    const r = spend / target
+    if (r > 1.5) return 'red'
+    if (r < 0.6) return 'gray'
+    return 'green'
+  }
+  const barColorOf = (s: YearStatus) =>
+    s === 'red' ? 'from-red-400 to-red-500 dark:from-red-500 dark:to-red-600'
+    : s === 'gray' ? 'from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700'
+    : 'from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600'
+  const statusTextOf = (s: YearStatus) =>
+    s === 'red' ? '超支·注意' : s === 'gray' ? '低于正常·该补点' : '正常够用'
+
   // 单件衣物折算为人民币（含数量）
   const valueCNY = (it: ClothingItem) => {
     const tc = (it.purchasePrice || 0) + (it.additionalCost || 0)
@@ -93,8 +120,11 @@ export default function WardrobePage() {
     return buckets
   }, [list, hkdRate])
 
-  // 按年份支出分布
+  // 按年份支出分布（当年按已过月份折算目标）
   const byYear = useMemo(() => {
+    const n = new Date()
+    const cy = n.getFullYear()
+    const em = n.getMonth() + 1
     const map = new Map<number, { count: number; value: number }>()
     list.forEach(it => {
       if (!it.purchaseDate) return
@@ -106,9 +136,9 @@ export default function WardrobePage() {
       map.set(year, cur)
     })
     return Array.from(map.entries())
-      .map(([year, v]) => ({ year, ...v }))
+      .map(([year, v]) => ({ year, ...v, target: year === cy ? budget * (em / 12) : budget }))
       .sort((a, b) => b.year - a.year)
-  }, [list, hkdRate])
+  }, [list, hkdRate, budget])
 
   // 按品牌分布
   const byBrand = useMemo(() => {
@@ -234,7 +264,6 @@ export default function WardrobePage() {
   }
 
   const maxMonth = Math.max(1, ...monthly.map(m => m.value))
-  const maxYear = Math.max(1, ...byYear.map(y => y.value))
   const maxBrand = Math.max(1, ...byBrand.map(b => b.value))
 
   return (
@@ -387,19 +416,48 @@ export default function WardrobePage() {
             </div>
           </Section>
 
-          {/* 按年份支出分布 */}
+          {/* 按年份支出 + 正常需求线 */}
           {byYear.length > 0 && (
-            <Section title="按年份支出" subtitle="每年在衣服上花了多少钱">
-              <div className="space-y-2.5">
-                {byYear.map(y => (
-                  <div key={y.year} className="flex items-center gap-3">
-                    <div className="w-14 text-sm text-gray-600 dark:text-gray-300 shrink-0 tabular-nums">{y.year}年</div>
-                    <div className="flex-1 h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-lg" style={{ width: `${(y.value / maxYear) * 100}%` }} />
+            <Section title="按年份支出" subtitle="对照「正常需求线」看是否够用">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <label className="text-xs text-gray-500 dark:text-gray-400">正常需求线（年）</label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">¥</span>
+                  <input
+                    type="number" min="0" step="100"
+                    value={budgetInput}
+                    onChange={e => setBudgetInput(Number(e.target.value) || 0)}
+                    onBlur={e => saveBudget(Number(e.target.value))}
+                    className="w-28 bg-gray-50 dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#2a2a2a] rounded-lg pl-6 pr-2 py-1 text-sm text-gray-700 dark:text-gray-200 tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-300"
+                  />
+                </div>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">改完自动保存 · 当年按已过月份折算目标</span>
+              </div>
+              <div className="space-y-4">
+                {byYear.map(y => {
+                  const st = statusOf(y.value, y.target)
+                  const ratio = y.target > 0 ? Math.min(y.value / y.target, 1) : 0
+                  const isCur = y.year === curYear
+                  const colorCls = st === 'red' ? 'text-red-500 dark:text-red-400' : st === 'gray' ? 'text-gray-400 dark:text-gray-500' : 'text-blue-600 dark:text-blue-300'
+                  return (
+                    <div key={y.year}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-sm text-gray-600 dark:text-gray-300 tabular-nums">
+                          {y.year}年{isCur && <span className="text-[11px] text-gray-400 dark:text-gray-500"> · 今年(按已过月份折算)</span>}
+                        </div>
+                        <div className="text-xs tabular-nums">
+                          <span className={colorCls}>{formatCurrency(y.value, 'CNY')}</span>
+                          <span className="text-gray-400 dark:text-gray-500"> / 目标 {formatCurrency(y.target, 'CNY')}</span>
+                          <span className={`ml-2 ${colorCls}`}>· {statusTextOf(st)}</span>
+                        </div>
+                      </div>
+                      <div className="h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
+                        <div className={`h-full bg-gradient-to-r ${barColorOf(st)} rounded-lg transition-all`} style={{ width: `${ratio * 100}%`, minHeight: y.value > 0 ? 4 : 0 }} />
+                      </div>
+                      <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums">{y.count} 件</div>
                     </div>
-                    <div className="w-28 text-right text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{y.count}件 · {formatCurrency(y.value, 'CNY')}</div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </Section>
           )}
