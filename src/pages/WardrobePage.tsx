@@ -42,7 +42,7 @@ function initialForm(): ClothingForm {
   }
 }
 
-const inputClass = "w-full bg-gray-50 dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-colors"
+const inputClass = "w-full bg-gray-50 dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition-colors"
 const labelClass = "block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5"
 
 export default function WardrobePage() {
@@ -239,7 +239,7 @@ export default function WardrobePage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#ec4899] to-[#be185d] rounded-2xl p-5 text-white shadow-lg shadow-pink-900/20">
+      <div className="bg-gradient-to-br from-[#0e8be7] to-[#006fc5] rounded-2xl p-5 text-white shadow-lg shadow-blue-900/20">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <Shirt className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function WardrobePage() {
             <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="任意备注" className={`${inputClass} resize-none`} />
           </div>
           <div className="flex items-center gap-3">
-            <button type="submit" disabled={saving || !form.name.trim()} className="flex items-center gap-1.5 px-5 py-2.5 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm">
+            <button type="submit" disabled={saving || !form.name.trim()} className="flex items-center gap-1.5 px-5 py-2.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm">
               {saving ? '保存中...' : editingId != null ? '更新' : '保存'}
             </button>
             {editingId != null && (
@@ -379,8 +379,8 @@ export default function WardrobePage() {
                   <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 tabular-nums opacity-0 group-hover:opacity-100 transition-opacity">
                     {m.value > 0 ? `¥${Math.round(m.value)}` : ''}
                   </span>
-                  <div className={`w-full rounded-t ${m.isCurrent ? 'bg-pink-500 dark:bg-pink-400' : 'bg-pink-200 dark:bg-pink-900/50'} transition-all`} style={{ height: `${(m.value / maxMonth) * 100}%`, minHeight: m.value > 0 ? 4 : 0 }} />
-                  <span className={`text-[10px] mt-1 ${m.isCurrent ? 'text-pink-600 dark:text-pink-300 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>{m.label}</span>
+                  <div className={`w-full rounded-t ${m.isCurrent ? 'bg-blue-500 dark:bg-blue-400' : 'bg-blue-200 dark:bg-blue-900/50'} transition-all`} style={{ height: `${(m.value / maxMonth) * 100}%`, minHeight: m.value > 0 ? 4 : 0 }} />
+                  <span className={`text-[10px] mt-1 ${m.isCurrent ? 'text-blue-600 dark:text-blue-300 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>{m.label}</span>
                 </div>
               ))}
             </div>
@@ -394,7 +394,7 @@ export default function WardrobePage() {
                   <div key={s.season} className="flex items-center gap-3">
                     <div className="w-10 text-sm text-gray-600 dark:text-gray-300 shrink-0">{s.label}</div>
                     <div className="flex-1 h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-pink-400 to-pink-500 dark:from-pink-500 dark:to-pink-600 rounded-lg" style={{ width: `${(s.value / maxSeason) * 100}%` }} />
+                      <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-lg" style={{ width: `${(s.value / maxSeason) * 100}%` }} />
                     </div>
                     <div className="w-28 text-right text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{s.count}件 · {formatCurrency(s.value, 'CNY')}</div>
                   </div>
@@ -411,7 +411,7 @@ export default function WardrobePage() {
                   <div key={b.brand} className="flex items-center gap-3">
                     <div className="w-20 text-sm text-gray-600 dark:text-gray-300 shrink-0 truncate" title={b.brand}>{b.brand}</div>
                     <div className="flex-1 h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-lg" style={{ width: `${(b.value / maxBrand) * 100}%` }} />
+                      <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600 rounded-lg" style={{ width: `${(b.value / maxBrand) * 100}%` }} />
                     </div>
                     <div className="w-28 text-right text-xs text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{b.count}件 · {formatCurrency(b.value, 'CNY')}</div>
                   </div>
@@ -439,7 +439,7 @@ export default function WardrobePage() {
                         <button
                           key={it.id}
                           onClick={() => openEdit(it)}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] text-xs text-gray-600 dark:text-gray-300 hover:border-pink-300 dark:hover:border-pink-700 transition-colors"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2a2a2a] text-xs text-gray-600 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                         >
                           <span>{it.emoji}</span>
                           <span className="max-w-[120px] truncate">{it.name}</span>
@@ -472,7 +472,7 @@ export default function WardrobePage() {
                     <div className="text-sm font-medium text-gray-800 dark:text-gray-100 tabular-nums">{formatCurrency((it.purchasePrice || 0) + (it.additionalCost || 0), it.currency)}</div>
                     <div className="text-[11px] text-gray-400 dark:text-gray-500 tabular-nums">{formatDate(it.purchaseDate)}</div>
                   </div>
-                  <button onClick={() => openEdit(it)} className="p-1.5 rounded-lg text-gray-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-950/30 transition-colors" title="编辑">
+                  <button onClick={() => openEdit(it)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors" title="编辑">
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button onClick={() => handleDelete(it.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors" title="删除">
