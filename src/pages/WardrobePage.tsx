@@ -74,7 +74,7 @@ export default function WardrobePage() {
   const barColorOf = (s: YearStatus) =>
     s === 'red' ? 'from-red-400 to-red-500 dark:from-red-500 dark:to-red-600'
     : s === 'gray' ? 'from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700'
-    : 'from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600'
+    : 'from-green-400 to-green-500 dark:from-green-500 dark:to-green-600'
   const statusTextOf = (s: YearStatus) =>
     s === 'red' ? '超支·注意' : s === 'gray' ? '低于正常·该补点' : '正常够用'
 
@@ -265,6 +265,7 @@ export default function WardrobePage() {
 
   const maxMonth = Math.max(1, ...monthly.map(m => m.value))
   const maxBrand = Math.max(1, ...byBrand.map(b => b.value))
+  const yMax = Math.max(budget, ...byYear.map(y => y.value), 1) * 1.15
 
   return (
     <div className="space-y-4">
@@ -416,9 +417,9 @@ export default function WardrobePage() {
             </div>
           </Section>
 
-          {/* 按年份支出 + 正常需求线 */}
+          {/* 按年份支出 + 正常需求线（柱状图） */}
           {byYear.length > 0 && (
-            <Section title="按年份支出" subtitle="对照「正常需求线」看是否够用">
+            <Section title="按年份支出" subtitle="每年衣物花费 vs 年目标线">
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <label className="text-xs text-gray-500 dark:text-gray-400">正常需求线（年）</label>
                 <div className="relative">
@@ -433,31 +434,60 @@ export default function WardrobePage() {
                 </div>
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">改完自动保存 · 当年按已过月份折算目标</span>
               </div>
-              <div className="space-y-4">
-                {byYear.map(y => {
-                  const st = statusOf(y.value, y.target)
-                  const ratio = y.target > 0 ? Math.min(y.value / y.target, 1) : 0
-                  const isCur = y.year === curYear
-                  const colorCls = st === 'red' ? 'text-red-500 dark:text-red-400' : st === 'gray' ? 'text-gray-400 dark:text-gray-500' : 'text-blue-600 dark:text-blue-300'
-                  return (
-                    <div key={y.year}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="text-sm text-gray-600 dark:text-gray-300 tabular-nums">
-                          {y.year}年{isCur && <span className="text-[11px] text-gray-400 dark:text-gray-500"> · 今年(按已过月份折算)</span>}
-                        </div>
-                        <div className="text-xs tabular-nums">
-                          <span className={colorCls}>{formatCurrency(y.value, 'CNY')}</span>
-                          <span className="text-gray-400 dark:text-gray-500"> / 目标 {formatCurrency(y.target, 'CNY')}</span>
-                          <span className={`ml-2 ${colorCls}`}>· {statusTextOf(st)}</span>
-                        </div>
+
+              {/* 图例 */}
+              <div className="flex items-center gap-4 text-[11px] text-gray-500 dark:text-gray-400 mb-3 flex-wrap">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-gray-300 dark:bg-gray-600" />偏低·该补点</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-green-500" />正常够用</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-500" />超支·浪费</span>
+                <span className="flex items-center gap-1"><span className="w-4 border-t-2 border-dashed border-amber-400" />年目标线</span>
+              </div>
+
+              {/* 柱状图 */}
+              <div className="relative h-48">
+                <div
+                  className="absolute left-0 right-0 border-t-2 border-dashed border-amber-400/80 z-10"
+                  style={{ bottom: `${Math.min(100, (budget / yMax) * 100)}%` }}
+                >
+                  <span className="absolute right-0 -top-4 text-[10px] text-amber-600 dark:text-amber-400 bg-white dark:bg-[#1a1a1a] px-1 rounded whitespace-nowrap">
+                    年目标 {formatCurrency(budget, 'CNY')}
+                  </span>
+                </div>
+                <div className="flex items-end justify-around gap-2 h-full">
+                  {byYear.map(y => {
+                    const st = statusOf(y.value, y.target)
+                    const h = yMax > 0 ? Math.min(100, (y.value / yMax) * 100) : 0
+                    const isCur = y.year === curYear
+                    return (
+                      <div
+                        key={y.year}
+                        className="flex flex-col items-center justify-end h-full flex-1 group"
+                        title={`${y.year}年：${formatCurrency(y.value, 'CNY')}（目标 ${formatCurrency(y.target, 'CNY')}）· ${statusTextOf(st)}`}
+                      >
+                        <span className="text-[11px] font-medium text-gray-600 dark:text-gray-300 tabular-nums mb-1">
+                          {formatCurrency(y.value, 'CNY')}
+                        </span>
+                        <div
+                          className={`w-full max-w-[64px] rounded-t-md bg-gradient-to-t ${barColorOf(st)} transition-all`}
+                          style={{ height: `${h}%`, minHeight: y.value > 0 ? 6 : 0 }}
+                        />
+                        <span className={`text-[11px] mt-1 ${isCur ? 'text-blue-600 dark:text-blue-300 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+                          {y.year}{isCur && '年'}
+                        </span>
                       </div>
-                      <div className="h-6 bg-gray-100 dark:bg-[#1e1e1e] rounded-lg overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r ${barColorOf(st)} rounded-lg transition-all`} style={{ width: `${ratio * 100}%`, minHeight: y.value > 0 ? 4 : 0 }} />
-                      </div>
-                      <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums">{y.count} 件</div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* 底部结论 */}
+              <div className="mt-3 text-[11px] text-gray-400 dark:text-gray-500 tabular-nums">
+                共 {byYear.length} 年有记录 ·
+                {byYear.every(y => statusOf(y.value, y.target) === 'gray')
+                  ? '当前各年均低于「正常需求线」，可适当添置衣物'
+                  : byYear.some(y => statusOf(y.value, y.target) === 'red')
+                    ? '存在超支年份，注意控制'
+                    : '整体处于正常需求区间'}
               </div>
             </Section>
           )}
